@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>📦 Project Akhir SA 😋😋</title>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="title">
+            <h2>ALGORITMA GREEDY</h2>
+            <div class="description">
+                dalam penentuan rute pengiriman
+            </div>
+            <img class="sidebar-close" src="icon/menu.svg" alt="" onclick="toggleSidebar()">
+        </div>
+        <div class="menu">
+            <div class="sub-menu">
+                <label>Pilih kota awal</label>
+                <select id="kota"></select>
+            </div>
+            <div class="sub-menu">
+                <label>Min-Max Greedy</label>
+                <select id="greed">
+                    <option value="min">Min</option>
+                    <option value="max">Max</option>
+                </select>
+            </div>
+            <div class="sub-menu">
+                <label>Variasi Greedy</label>
+                <select id="type">
+                    <option value="distances">Distance</option>
+                    <option value="weight">Weight</option>
+                    <option value="profit">Profit</option>
+                    <option value="density">Density</option>
+                </select>
+            </div>
+            <div class="sub-menu sub-menu-weight">
+                <label>Weight</label>
+                <div class="extends" onclick="toggle('.sub-menu-weight')">
+                    <div>Atur Weight</div>
+                    <img src="icon/plus.svg" alt="">
+                </div>
+                <div class="extendable extendable-weight hidden">
+                    <div class="input">
+                    </div>
+                    <div class="extendable-bottom">
+                        <label>Weight Maksimum</label><br>
+                        <input id="maxWeight" type="number" min="0" value="100"><br>
+                    </div>
+                </div>
+            </div>
+            <div class="sub-menu sub-menu-paket">
+                <label>Profit</label>
+                <div class="extends" onclick="toggle('.sub-menu-paket')">
+                    <div>Atur Total Profit</div>
+                    <img src="icon/plus.svg" alt="">
+                </div>
+                <div class="extendable extendable-total hidden">
+                    <div class="input input-total">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+
+        <span class="sidebar-open hidden" onclick="toggleSidebar()" >
+            <img src="icon/menu.svg" alt="">
+        </span>
+        <div class="map">
+            <canvas id="canvasMap">
+                Browser Tidak Support Canvas
+            </canvas>
+        </div>
+        <div class="sidebar-menu">
+
+        </div>
+        <div class="life-cycle drag">
+            <button id="back" onclick="back()"><img src="icon/next.svg" alt=""></button>
+            <button id="start" onclick="startGreedy()"><div class="circle"><img src="icon/play.svg" alt=""></div></button>
+            <button id="next" onclick="next()"><img src="icon/next.svg" alt=""></button>
+        </div>
+        <!-- <div class="path">
+            <label>PATH</label>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Kota</th>
+                        <th>Distance</th>
+                        <th>Weight</th>
+                        <th>Profit</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div> -->
+    </div>
+</body>
+<script src="drag.js"></script>
+<script src="city.js"></script>
+<script>
+    var c = document.getElementById("canvasMap");
+    var ctx = c.getContext("2d");
+    scale = 1.4;
+
+    // dragElement(document.querySelector(".life-cycle"));
+
+    const radius = 5;
+
+    const data = [
+        // nama, distances, circlePos, weight
+        ["Palembang",[0,112,313,203,63.8,73], [765,272], 20, 20000],
+        ["Prabumulih", [112, 0, 209, 200, 168, 128], [638, 376], 30, 10000],
+        ["Lubuk Linggau", [312, 209, 0, 111, 368, 328], [310, 352], 10, 20000],
+        ["Ngulak", [203, 200, 111, 0, 265, 269], [438, 229], 20, 40000],
+        ["Upang", [63.8, 168, 369, 266, 0, 131], [809, 218], 50, 100000],
+        ["Pedamaran", [73.4, 105, 314, 269, 138, 0], [778, 395], 20, 30000],
+    ];
+    
+    let cityObj = [];
+
+    for (const city of data) {
+        const [name, distances, circlePos, weight, profit] = city;
+        const scaledCirclePos = circlePos.map(pos => pos * scale);
+        cityObj.push(new City(name, distances, scaledCirclePos, weight, profit));
+    }
+
+    function renderSelect() {
+        const select = document.querySelector("#kota");
+        let options = "";
+        for (const city of cityObj) {
+            options += `<option value='${city.getName()}'>${city.getName()}</option>`
+        }
+        select.innerHTML = options;
+    }
+
+    function renderInput() {
+        const input = document.querySelector(".input");
+        let form = "";
+
+        for (const [idx, city] of cityObj.entries()) {
+            form += `
+                <label>${city.getName()}</label><br>
+                <input id="weight-city-${idx}" type="number" min="0" value="${city.getWeight()}" onchange="updateWeight(${idx})"><br>
+            `;
+        }
+        input.innerHTML = form;
+    }
+
+    function renderInputTotal() {
+        const input = document.querySelector(".input-total");
+        let form = "";
+
+        for (const [idx, city] of cityObj.entries()) {
+            // console.log(city.getTotalPacket());
+            form += `
+                <label>${city.getName()}</label><br>
+                <input id="total-packet-city-${idx}" type="number" min="0" value="${city.getProfit()}" onchange="updateTotal(${idx})"><br>
+            `;
+        }
+        input.innerHTML = form;
+    }
+
+    renderInput();
+    renderInputTotal();
+    renderSelect();
+    
+    var img = new Image();
+    img.src = "Map.jpg";
+    img.onload = function() {
+        c.width = img.width*scale;
+        c.height = img.height*scale;
+        ctx.drawImage(img, 0, 0, this.width*scale, this.height*scale);
+
+        // drawDistances(0,1);
+        // drawDistances(1,2);
+        // drawDistances(2,3);
+        // drawDistances(3,4);
+        // drawDistances(4,5);
+        // drawDistances(5,0);
+        drawLocation();
+    };
+
+    let current = 0;
+    let pathData;
+
+    function startGreedy() {
+        pathData =[];
+        c.width = img.width*scale;
+        c.height = img.height*scale;
+        ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale);
+        path = greedy();
+        // for (let i = 0; i < path.length -1; i++) {
+        //     drawDistances(path[i],path[i+1]);
+        // }
+        for (let i = 0; i < path.length-1; i++) {
+            drawDistances(path[i],path[i+1]);
+            pathData.push(path[i])
+        }
+
+        drawLocation();
+        // renderTable(pathData);
+
+        current = 5;
+    }
+
+    function next() {
+        pathData =[];
+        c.width = img.width*scale;
+        c.height = img.height*scale;
+        ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale);
+        path = greedy();
+        // for (let i = 0; i < path.length -1; i++) {
+        //     drawDistances(path[i],path[i+1]);
+        // }
+        current+= 1;
+        checkCurrent();
+        for (let i = 0; i < current; i++) {
+            drawDistances(path[i],path[i+1]);
+            pathData.push(path[i])
+        }
+
+        drawLocation();
+        // renderTable(pathData);
+
+        function checkCurrent() {
+            if (current >= path.length) {
+                current = path.length-1
+            }
+            console.log(current);
+        }
+    }
+
+    function back() {
+        pathData =[];
+        current -= 1;
+        c.width = img.width*scale;
+        c.height = img.height*scale;
+        ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale);
+        path = greedy();
+        // for (let i = 0; i < path.length -1; i++) {
+        //     drawDistances(path[i],path[i+1]);
+        // }
+        checkCurrent();
+
+        for (let i = 0; i < current; i++) {
+            drawDistances(path[i],path[i+1]);
+            pathData.push(path[i])
+        }
+
+        // renderTable(pathData);
+
+
+        drawLocation();
+
+        function checkCurrent() {
+            if (current < 0) {
+                current = 0
+            }
+        }
+    }
+
+
+
+    function drawLocation() {
+        for (const city of cityObj) {
+            const position = city.getCirclePosition();
+            ctx.beginPath();
+            ctx.arc(position[0], position[1], radius, 0, 2 * Math.PI, false);
+            ctx.fillStyle = 'red';
+            ctx.fill();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+        }
+    };
+
+    function drawDistances(city1,city2) {
+        drawLine(cityObj[city1].getCirclePosition(), cityObj[city2].getCirclePosition(), cityObj[city1].getDistance(city2)+" km");
+    };
+
+    function drawLine(pos1, pos2, text) {
+        ctx.moveTo(pos1[0], pos1[1]);
+        ctx.lineTo(pos2[0], pos2[1]);
+        ctx.stroke();
+        drawText(pos1, pos2, text);
+    };
+
+    function drawText(pos1, pos2, text) {
+        const midX = (pos1[0] + pos2[0]) / 2;
+        const midY = (pos1[1] + pos2[1]) / 2;
+
+        ctx.fillStyle = 'black';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, midX, midY);
+    };
+
+    function toggle(e) {
+        const div = document.querySelector(`${e}`);
+
+        div.querySelector('.extendable').classList.toggle('hidden');
+        div.querySelector('.extends').classList.toggle('expanded');
+
+        const image = div.querySelector('img');
+
+        if (image.src.endsWith('plus.svg')) {
+            image.src = 'icon/min.svg';
+        } else {
+            image.src = 'icon/plus.svg';
+        }
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOpen = document.querySelector('.sidebar-open');
+        sidebar.classList.toggle('hidden');
+        sidebarOpen.classList.toggle('hidden');
+    }
+
+    function greedy() {
+        const banyakKota = cityObj.length;
+        const visited = new Array(banyakKota).fill(false);
+        
+        const distances = cityObj.map(item => item.getDistances());
+        const weight = cityObj.map(item => item.getWeight());
+        const total = cityObj.map(item => item.getProfit());
+
+        let dynamic_var;
+        const type = document.querySelector('#type').value;
+        
+        if (type == "distances") {
+            dynamic_var = cityObj.map(item => item.getDistances());
+        } else if (type == "weight"){
+            const weight2 = cityObj.map(item => [item.getWeight()]);
+            dynamic_var = getWeightPerCity(weight2);
+            // console.log(dynamic_var);
+        } else if (type == "profit"){
+            dynamic_var = getWeightPerCity(cityObj.map(item => [item.getProfit()]));
+        } else {
+            const weight2 = cityObj.map(item => [item.getWeight()]);
+            const weight3 = getWeightPerCity(weight2);
+            const profit = getWeightPerCity(cityObj.map(item => [item.getProfit()]));
+            const density = profit.map((row, i) =>
+                row.map((value, j) => {
+                    const divisionResult = value / weight3[i][j];
+                    return isNaN(divisionResult) ? 0 : divisionResult;
+                })
+            );
+            // console.log(density);
+            dynamic_var = density;
+        }
+
+        const maxWeight = document.querySelector('#maxWeight').value;
+        // console.log(maxWeight);
+
+        //greedy
+
+        const path = [];
+        const kotaAwal = document.querySelector('#kota').value;
+        const idxKotaAwal = cityObj.findIndex(item => item.name === kotaAwal);
+        // console.log(idxKotaAwal);
+        visited[idxKotaAwal] = true;
+        // console.log(visited);
+        let current = idxKotaAwal;
+        let sumWeight = 0;
+        path.push(idxKotaAwal);
+        const greed = document.querySelector('#greed').value;
+
+        for (let i = 0; i < dynamic_var.length; i++) {
+            let next = -1;
+            let min;
+            if (greed == "min") {
+                min = Infinity; //get nilai terbesar
+            } else {
+                min = -Infinity;
+            }
+            
+            for (let j = 0; j < dynamic_var[i].length; j++) {
+                //check kota yang telah dikunjungi dan check jika kota sama
+                if (!visited[j] && j != i) {
+                    //check jika jarak kurang dari min(min perlu diambil nilai terbesar untuk ini)
+                    if (greed == "min") {
+                        if (dynamic_var[current][j] < min) {
+                            next = j;
+                            // console.log(dynamic_var[[current][j]]);
+                            min = dynamic_var[current][j];
+                        }
+                    }  else{
+                        if (dynamic_var[current][j] > min) {
+                            next = j;
+                            // console.log(dynamic_var[[current][j]]);
+                            min = dynamic_var[current][j];
+                        }
+                    }
+                }
+            }
+
+            //check ketersediaan kota selanjutnya
+            if (next !== -1 && sumWeight+weight[next] <= maxWeight) {
+                visited[next] = true;
+                path.push(next);
+                sumWeight += weight[next];
+                // console.log(sumWeight);
+                current = next;
+            }
+            
+        }
+
+        //ambil lagi kota awal jika selesai
+        path.push(idxKotaAwal);
+
+        return path;
+    }
+
+    function getWeightPerCity(weight2) {
+        transformedArray = [];
+        for (let i = 0; i < weight2.length; i++) {
+            transformedArray.push(weight2.map((item, idx) => {
+            if(idx === i){
+                return 0;
+            }
+                return item;
+            }).flat())    
+        }
+        return transformedArray;
+    }
+
+    function updateWeight(idx) {
+        // console.log(document.querySelector(`#city-${idx}`).value);
+        cityObj[idx].setWeight(parseInt(document.querySelector(`#weight-city-${idx}`).value));
+        // console.log(cityObj.map(item => item.getWeight()));
+    }
+
+    function updateTotal(idx) {
+        cityObj[idx].setTotal(parseInt(document.querySelector(`#total-packet-city-${idx}`).value));
+    }
+
+    // function renderTable(data) {
+    //     let sumDistance = 0;
+    //     let sumWeight = 0;
+    //     const tbody = document.querySelector('.path tbody');
+    //     let tr = "";
+    //     tr += `
+    //         <tr>
+    //             <td>${1}</td>
+    //             <td>${cityObj[data[0]].getName()} -> ${cityObj[data[1]].getName()}</td>
+    //             <td>${cityObj[data[0]].getDistance(data[1])}</td>
+    //             <td>0</td>
+    //             <td>${cityObj[data[0]].getWeight()}</td>
+    //         </tr>
+    //     `
+    //     sumDistance+=cityObj[data[0]].getDistance(data[1]);
+    //     for (let i = 1; i < data.length-1; i++) {
+    //         console.log(cityObj[data[i]]);
+    //         tr += `
+    //         <tr>
+    //             <td>${i+1}</td>
+    //             <td>${cityObj[data[i]].getName()} -> ${cityObj[data[i+1]].getName()}</td>
+    //             <td>${cityObj[data[i]].getDistance(data[i+1])}</td>
+    //             <td>${cityObj[data[i]].getWeight()}</td>
+    //             <td>${cityObj[data[i]].getWeight()}</td>
+    //         </tr>
+    //         `
+    //         sumDistance+=cityObj[data[i]].getDistance(data[i+1]);
+    //         sumWeight+=cityObj[data[i]].getWeight();
+    //     }
+    //     let last = data.length-1
+    //     tr += `
+    //         <tr>
+    //             <td>${data.length}</td>
+    //             <td>${cityObj[data[last]].getName()} -> ${cityObj[data[0]].getName()}</td>
+    //             <td>${cityObj[data[last]].getDistance(data[0])}</td>
+    //             <td>${cityObj[data[last]].getWeight()}</td>
+    //             <td>${cityObj[data[last]].getWeight()}</td>
+    //         </tr>
+    //     `
+    //     sumDistance+=cityObj[data[last]].getDistance(data[0]);
+    //     sumWeight+=cityObj[data[last]].getWeight();
+    //     tr += `
+    //         <tr>
+    //             <td colspan="2">Total</td>
+    //             <td>${sumDistance}</td>
+    //             <td>${sumWeight}</td>
+    //             <td>${cityObj[data[last]].getWeight()}</td>
+    //         </tr>
+    //     `
+    //     tbody.innerHTML = tr;
+    // }
+
+</script>
+</html>
