@@ -32,6 +32,7 @@ body{
 .sidebar{
     position: relative;
     width: 24vw;
+    min-width: 300px;
     height: 100vh;
     padding: 27px 22px;
     padding-right: 0px;
@@ -251,7 +252,7 @@ label{
     border-radius: 5px;
 }
 
-@media only screen and (max-width: 1000px) {
+@media only screen and (max-width: 600px) {
     .sidebar{
         min-width: 85vw;
     }
