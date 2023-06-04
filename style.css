@@ -264,6 +264,10 @@ label{
     padding-bottom: 10px;
 }
 
+.brute-container{
+    height: 80%;
+}
+
 .table-container{
     overflow: scroll;
     flex-grow: 1;

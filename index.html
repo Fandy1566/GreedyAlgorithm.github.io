@@ -89,6 +89,9 @@
         <span class="floating-menu info-open" onclick="toggleMenu('.info','.info-open')" style="top: 10px; right: 100px; padding-inline: 10px;">
             <label>INFO</label>
         </span>
+        <span class="floating-menu brute-open" onclick="toggleMenu('.brute','.brute-open')" style="top: 10px; right: 170px; padding-inline: 10px;">
+            <label>BEST</label>
+        </span>
         <div class="floating-box path drag hidden" style="min-height: 100px;height: fit-content; max-height: 90vh; width: fit-content; min-width: 400px;">
             <div class="header" style="display: flex; justify-content: space-between;">
                 <label>PATH</label>
@@ -111,6 +114,25 @@
                 
             </div>
         </div>
+        <div class="floating-box brute drag hidden" style="width: 600px; top: 50%; left: 50%; transform: translate(-50%,-50%);">
+            <div class="header" style="display: flex; justify-content: space-between;">
+                <label style="font-size: 20px; font-weight: 600;">BRUTE</label>
+                <span onclick="toggleMenu('.brute','.brute-open')" class="click">
+                    &#x2715
+                </span>
+            </div>
+            <div class="header-container">
+                <label>Sort</label>
+                <select id="brute-select">
+                    <option value="min">Min</option>
+                    <option value="max">Max</option>
+                </select>
+                <button onclick="renderBruteResult('min')">Find</button>
+            </div>
+            <div class="brute-container" style="padding-inline: 20px;">
+                
+            </div>
+        </div>
     </div>
 </body>
 <script src="drag.js"></script>
@@ -122,6 +144,7 @@
 
     dragElement(document.querySelector(".path"));
     dragElement(document.querySelector(".info"));
+    // dragElement(document.querySelector(".brute"));
 
     const radius = 5;
 
@@ -249,7 +272,7 @@
         c.width = img.width*scale;
         c.height = img.height*scale;
         ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale);
-        path = greedy();
+        path = main();
         // for (let i = 0; i < path.length -1; i++) {
         //     drawDistances(path[i],path[i+1]);
         // }
@@ -269,7 +292,7 @@
         c.width = img.width*scale;
         c.height = img.height*scale;
         ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale);
-        path = greedy();
+        path = main();
         // for (let i = 0; i < path.length -1; i++) {
         //     drawDistances(path[i],path[i+1]);
         // }
@@ -296,7 +319,7 @@
         c.width = img.width*scale;
         c.height = img.height*scale;
         ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale);
-        path = greedy();
+        path = main();
         // for (let i = 0; i < path.length -1; i++) {
         //     drawDistances(path[i],path[i+1]);
         // }
@@ -369,17 +392,10 @@
         }
     }
 
-    function greedy() {
-        const banyakKota = cityObj.length;
-        const visited = new Array(banyakKota).fill(false);
-        
-        const distances = cityObj.map(item => item.getDistances());
-        const weight = cityObj.map(item => item.getWeight());
-        const total = cityObj.map(item => item.getProfit());
-
+    function main() {
         let dynamic_var;
         const type = document.querySelector('#type').value;
-        
+        console.log(type);
         if (type == "distances") {
             dynamic_var = cityObj.map(item => item.getDistances());
         } else if (type == "weight"){
@@ -387,6 +403,7 @@
             dynamic_var = getWeightPerCity(weight2);
         } else if (type == "profit"){
             dynamic_var = getWeightPerCity(cityObj.map(item => [item.getProfit()]));
+            console.log(dynamic_var);
         } else {
             const weight2 = cityObj.map(item => [item.getWeight()]);
             const weight3 = getWeightPerCity(weight2);
@@ -399,19 +416,32 @@
             );
             dynamic_var = density;
         }
-
-        const maxWeight = document.querySelector('#maxWeight').value;
-        console.log(maxWeight);
-
-        //greedy
-        const path = [];
+        // console.log(maxWeight);
         const kotaAwal = document.querySelector('#kota').value;
+
+        const greed = document.querySelector('#greed').value;
+
+        [path, profit, weight] = greedyAlgorithm(dynamic_var,kotaAwal,greed);
+        return path;
+    }
+
+    function greedyAlgorithm(dynamic_var,kotaAwal,greed) {
+        const path = [];
+        const maxWeight = document.querySelector('#maxWeight').value;
+
+        const banyakKota = cityObj.length;
+        const visited = new Array(banyakKota).fill(false);
+        
+        const distances = cityObj.map(item => item.getDistances());
+        const weight = cityObj.map(item => item.getWeight());
+        const total = cityObj.map(item => item.getProfit());
+
         const idxKotaAwal = cityObj.findIndex(item => item.name === kotaAwal);
         visited[idxKotaAwal] = true;
         let current = idxKotaAwal;
         let sumWeight = 0;
+        let sumProfit = 0;
         path.push(idxKotaAwal);
-        const greed = document.querySelector('#greed').value;
 
         for (let i = 0; i < dynamic_var.length; i++) {
             let next = -1;
@@ -424,7 +454,7 @@
             
             for (let j = 0; j < dynamic_var[i].length; j++) {
                 //check kota yang telah dikunjungi dan check jika kota sama
-                if (!visited[j] && j != i) {
+                if (!visited[j]) {
                     //check jika jarak kurang dari min(min perlu diambil nilai terbesar untuk ini)
                     if (greed == "min") {
                         if (dynamic_var[current][j] < min) {
@@ -437,6 +467,7 @@
                             next = j;
                             // console.log(dynamic_var[[current][j]]);
                             min = dynamic_var[current][j];
+                            console.log(min);
                         }
                     }
                 }
@@ -447,7 +478,7 @@
                 visited[next] = true;
                 path.push(next);
                 sumWeight += weight[next];
-                console.log(sumWeight);
+                sumProfit += total[next];
                 current = next;
             }
             
@@ -455,8 +486,68 @@
 
         //ambil lagi kota awal jika selesai
         path.push(idxKotaAwal);
+        // console.log(path);
+        return [path, sumProfit, sumWeight];
+    }
 
-        return path;
+    function bruteForceAlgorithm(type) {
+        result = [];
+        // result.push(greedyAlgorithm(dynamic_var,kotaAwal,greed,type))
+        var selectElement = document.getElementById("type");
+        var optionValues = [];
+        for (var i = 0; i < selectElement.options.length; i++) {
+            optionValues.push(selectElement.options[i].value);
+        }
+        var selectElementGreed = document.getElementById("greed");
+        var optionValuesGreed = [];
+        for (var i = 0; i < selectElementGreed.options.length; i++) {
+            optionValuesGreed.push(selectElementGreed.options[i].value);
+        }
+        var array =[];
+        for (let i = 0; i < optionValues.length; i++) {
+            if (optionValues == "distances") {
+                array.push(cityObj.map(item => item.getDistances()));
+            } else if (optionValues == "weight"){
+                const weight2 = cityObj.map(item => [item.getWeight()]);
+                array.push(getWeightPerCity(weight2));
+            } else if (optionValues == "profit"){
+                array.push(getWeightPerCity(cityObj.map(item => [item.getProfit()])));
+            } else {
+                const weight2 = cityObj.map(item => [item.getWeight()]);
+                const weight3 = getWeightPerCity(weight2);
+                const profit = getWeightPerCity(cityObj.map(item => [item.getProfit()]));
+                const density = profit.map((row, i) =>
+                    row.map((value, j) => {
+                        const divisionResult = value / weight3[i][j];
+                        return isNaN(divisionResult) ? 0 : divisionResult;
+                    })
+                );
+                array.push(density);
+            }
+        }
+
+        for (let i = 0; i < array.length; i++) {
+            for (let j = 0; j < cityObj.length; j++) {
+                for (let k = 0; k < optionValuesGreed.length; k++) {
+                    [path, profit,weight] = greedyAlgorithm(array[i],cityObj[j].getName(),optionValuesGreed[k])
+                    // console.log(path,profit);
+                    result.push([[optionValues[i],cityObj[j].getName(), optionValuesGreed[k]],[path,profit, weight]])
+                }
+            }
+        }
+
+        if (type.toUpperCase() == "MIN") {
+            result.sort(function(a, b) {
+                return a[1][1] - b[1][1];
+            });
+        } else {
+            result.sort(function(a, b) {
+                return b[1][1] - a[1][1];
+            });
+        }
+        // console.log(result);
+
+        return result;
     }
 
     function getWeightPerCity(weight2) {
@@ -477,7 +568,7 @@
     }
 
     function updateTotal(idx) {
-        cityObj[idx].setTotal(parseInt(document.querySelector(`#total-packet-city-${idx}`).value));
+        cityObj[idx].setProfit(parseInt(document.querySelector(`#total-packet-city-${idx}`).value));
     }
 
     function renderTable(data) {
@@ -491,16 +582,16 @@
             tr += `
             <div class="table-container">
                 <table>
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Kota</th>
-                                <th>Distance</th>
-                                <th>Weight</th>
-                                <th>Profit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Kota</th>
+                            <th>Distance</th>
+                            <th>Weight</th>
+                            <th>Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
             `
             for (let i = 0; i < data.length; i++) {
                 tr += `
@@ -539,6 +630,46 @@
         const sidebarOpen = document.querySelector(target);
         sidebar.classList.toggle('hidden');
         sidebarOpen.classList.toggle('hidden');
+    }
+
+    function renderBruteResult() {
+        const type = document.querySelector("#brute-select").value;
+        const brute = bruteForceAlgorithm(type);
+        const container = document.querySelector(".brute-container");
+        let isi = "";
+        isi +=`
+            <div class="table-container">
+            <table>
+        `
+        isi +=`
+                <tr>
+                    <th>No</th>
+                    <th>Kota Awal</th>
+                    <th>Variasi</th>
+                    <th>Tipe</th>
+                    <th>Rute</th>
+                    <th>Profit</th>
+                    <th>Weight</th>
+                </tr>
+            `
+        for (let i = 0; i < brute.length; i++) {
+            isi +=`
+                <tr>
+                    <td>${i+1}</td>
+                    <td>${brute[i][0][1]}</td>
+                    <td>${brute[i][0][0]}</td>
+                    <td>${brute[i][0][2]}</td>
+                    <td>${brute[i][1][0]}</td>
+                    <td>${brute[i][1][1]}</td>
+                    <td>${brute[i][1][2]}</td>
+                </tr>
+            `
+        }
+        isi +=`
+            </table>
+            </div>
+        `
+        container.innerHTML = isi;
     }
 
 </script>
