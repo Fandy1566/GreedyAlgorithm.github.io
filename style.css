@@ -65,16 +65,14 @@ input[type=number] {
     position: absolute;
 }
 
-.sidebar-open{
+.floating-menu{
     position: absolute;
-    top: 10px;
-    left: 10px;
     background-color: var(--background-color);
     box-shadow: 0px 0px 10px 4px rgba(9, 0, 67, 0.08);
     border-radius: 5px;
     display: grid;
     place-items: center;
-    width: 30px;
+    min-width: 30px;
     height: 30px;
 }
 
@@ -129,7 +127,7 @@ label{
 }
 
 .hidden{
-    display: none;
+    display: none !important;
 }
 
 
@@ -238,18 +236,75 @@ label{
 }
 
 .drag{
-    /* cursor: grab; */
+    cursor: grab;
 }
 
-.path{
+.click{
+    cursor: pointer;
+}
+
+.floating-box{
     position: absolute;
+    display: flex;
+    flex-direction: column;
     top: 20px;
     right: 30px;
-
     background-color: var(--background-color);
     width: 250px;
     height: 400px;
     border-radius: 5px;
+    padding: 5px 10px;
+}
+
+.path-container{
+    position: relative;
+    max-height: 90vh;
+    padding-inline: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.table-container{
+    overflow: scroll;
+    flex-grow: 1;
+    border: 1px solid var(--text-color);
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+    border-radius: 5px;
+    max-height: 100%;
+}
+
+.table-container::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
+}
+
+.info-container{
+    overflow: scroll;
+    flex-grow: 1;
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+    border-radius: 5px;
+}
+
+.info-container::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
+}
+
+.table-container table{
+    margin: -1px;
+    overflow: scroll;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container th{
+    font-weight: 400;
+    font-size: 14px;
+}
+
+.table-container td, .table-container th{
+    border: 1px solid var(--border-stroke-color);
+    padding: 5px 10px;
 }
 
 @media only screen and (max-width: 600px) {

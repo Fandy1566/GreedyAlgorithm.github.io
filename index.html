@@ -14,7 +14,7 @@
             <div class="description">
                 dalam penentuan rute pengiriman
             </div>
-            <img class="sidebar-close" src="icon/menu.svg" alt="" onclick="toggleSidebar()">
+            <img class="sidebar-close" src="icon/menu.svg" alt="" onclick="toggleMenu('.sidebar','.sidebar-open')">
         </div>
         <div class="menu">
             <div class="sub-menu">
@@ -67,7 +67,7 @@
     </div>
     <div class="content">
 
-        <span class="sidebar-open hidden" onclick="toggleSidebar()" >
+        <span class="floating-menu sidebar-open hidden" onclick="toggleMenu('.sidebar','.sidebar-open')" style="top: 10px; left: 10px;">
             <img src="icon/menu.svg" alt="">
         </span>
         <div class="map">
@@ -78,28 +78,39 @@
         <div class="sidebar-menu">
 
         </div>
-        <div class="life-cycle drag">
+        <div class="life-cycle">
             <button id="back" onclick="back()"><img src="icon/next.svg" alt=""></button>
             <button id="start" onclick="startGreedy()"><div class="circle"><img src="icon/play.svg" alt=""></div></button>
             <button id="next" onclick="next()"><img src="icon/next.svg" alt=""></button>
         </div>
-        <!-- <div class="path">
+        <span class="floating-menu path-open" onclick="toggleMenu('.path','.path-open')" style="top: 10px; right: 30px; padding-inline: 10px;">
             <label>PATH</label>
-            <table>
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Kota</th>
-                        <th>Distance</th>
-                        <th>Weight</th>
-                        <th>Profit</th>
-                    </tr>
-                </thead>
-                <tbody>
+        </span>
+        <span class="floating-menu info-open" onclick="toggleMenu('.info','.info-open')" style="top: 10px; right: 100px; padding-inline: 10px;">
+            <label>INFO</label>
+        </span>
+        <div class="floating-box path drag hidden" style="min-height: 100px;height: fit-content; max-height: 90vh; width: fit-content; min-width: 400px;">
+            <div class="header" style="display: flex; justify-content: space-between;">
+                <label>PATH</label>
+                <span onclick="toggleMenu('.path','.path-open')" class="click">
+                    &#x2715
+                </span>
+            </div>
+            <div class="path-container" style="flex-grow: 1;">
 
-                </tbody>
-            </table>
-        </div> -->
+            </div>
+        </div>
+        <div class="floating-box info drag hidden" style="width: 600px;">
+            <div class="header" style="display: flex; justify-content: space-between;">
+                <label style="font-size: 20px; font-weight: 600;">INFO</label>
+                <span onclick="toggleMenu('.info','.info-open')" class="click">
+                    &#x2715
+                </span>
+            </div>
+            <div class="info-container" style="padding-inline: 20px;">
+                
+            </div>
+        </div>
     </div>
 </body>
 <script src="drag.js"></script>
@@ -109,7 +120,8 @@
     var ctx = c.getContext("2d");
     scale = 1.4;
 
-    // dragElement(document.querySelector(".life-cycle"));
+    dragElement(document.querySelector(".path"));
+    dragElement(document.querySelector(".info"));
 
     const radius = 5;
 
@@ -123,6 +135,47 @@
         ["Pedamaran", [73.4, 105, 314, 269, 138, 0], [778, 395], 20, 30000],
     ];
     
+    function renderInfo() {
+        const box = document.querySelector(".info-container");
+        let text = "";
+
+        for (let i = 0; i < cityObj.length; i++) {
+            text += `
+                <label>${cityObj[i].getName()}</label>
+                <div class="table-container">
+                <table>
+                    <tr>
+
+            `
+            for (let j = 0; j < cityObj[i].getDistances().length; j++) {
+                text +=`
+                    <th>${cityObj[j].getName()}</th>
+                `
+            }
+            text +=`
+                <tr>
+                </tr>
+            `
+            for (let j = 0; j < cityObj[i].getDistances().length; j++) {
+                text +=`
+                    <td>${cityObj[i].getDistance(j)}</td>
+                `
+            }
+            text += `
+                    </tr>
+                </table>
+                </div>
+                <div>
+                    Berat Paket : ${cityObj[i].getWeight().toLocaleString()} Kg
+                </div>
+                <div>
+                    Profit      : Rp ${cityObj[i].getProfit().toLocaleString()}
+                </div>
+            `
+        }
+        box.innerHTML = text;
+    }
+
     let cityObj = [];
 
     for (const city of data) {
@@ -170,6 +223,7 @@
     renderInput();
     renderInputTotal();
     renderSelect();
+    renderInfo();
     
     var img = new Image();
     img.src = "Map.jpg";
@@ -203,11 +257,11 @@
             drawDistances(path[i],path[i+1]);
             pathData.push(path[i])
         }
-
+        current = path.length-1
+        // pathData.push(path[current])
+        // console.log(path, pathData, cityObj.length-1);
         drawLocation();
-        // renderTable(pathData);
-
-        current = 5;
+        renderTable(pathData);
     }
 
     function next() {
@@ -225,15 +279,14 @@
             drawDistances(path[i],path[i+1]);
             pathData.push(path[i])
         }
-
+        pathData.push(path[current])
         drawLocation();
-        // renderTable(pathData);
+        renderTable(pathData);
 
         function checkCurrent() {
             if (current >= path.length) {
                 current = path.length-1
             }
-            console.log(current);
         }
     }
 
@@ -253,17 +306,16 @@
             drawDistances(path[i],path[i+1]);
             pathData.push(path[i])
         }
-
-        // renderTable(pathData);
-
+        pathData.push(path[current])
+        renderTable(pathData);
 
         drawLocation();
-
         function checkCurrent() {
             if (current < 0) {
                 current = 0
             }
         }
+        renderTable(pathData);
     }
 
 
@@ -317,13 +369,6 @@
         }
     }
 
-    function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const sidebarOpen = document.querySelector('.sidebar-open');
-        sidebar.classList.toggle('hidden');
-        sidebarOpen.classList.toggle('hidden');
-    }
-
     function greedy() {
         const banyakKota = cityObj.length;
         const visited = new Array(banyakKota).fill(false);
@@ -340,7 +385,6 @@
         } else if (type == "weight"){
             const weight2 = cityObj.map(item => [item.getWeight()]);
             dynamic_var = getWeightPerCity(weight2);
-            // console.log(dynamic_var);
         } else if (type == "profit"){
             dynamic_var = getWeightPerCity(cityObj.map(item => [item.getProfit()]));
         } else {
@@ -353,21 +397,17 @@
                     return isNaN(divisionResult) ? 0 : divisionResult;
                 })
             );
-            // console.log(density);
             dynamic_var = density;
         }
 
         const maxWeight = document.querySelector('#maxWeight').value;
-        // console.log(maxWeight);
+        console.log(maxWeight);
 
         //greedy
-
         const path = [];
         const kotaAwal = document.querySelector('#kota').value;
         const idxKotaAwal = cityObj.findIndex(item => item.name === kotaAwal);
-        // console.log(idxKotaAwal);
         visited[idxKotaAwal] = true;
-        // console.log(visited);
         let current = idxKotaAwal;
         let sumWeight = 0;
         path.push(idxKotaAwal);
@@ -407,7 +447,7 @@
                 visited[next] = true;
                 path.push(next);
                 sumWeight += weight[next];
-                // console.log(sumWeight);
+                console.log(sumWeight);
                 current = next;
             }
             
@@ -433,66 +473,73 @@
     }
 
     function updateWeight(idx) {
-        // console.log(document.querySelector(`#city-${idx}`).value);
         cityObj[idx].setWeight(parseInt(document.querySelector(`#weight-city-${idx}`).value));
-        // console.log(cityObj.map(item => item.getWeight()));
     }
 
     function updateTotal(idx) {
         cityObj[idx].setTotal(parseInt(document.querySelector(`#total-packet-city-${idx}`).value));
     }
 
-    // function renderTable(data) {
-    //     let sumDistance = 0;
-    //     let sumWeight = 0;
-    //     const tbody = document.querySelector('.path tbody');
-    //     let tr = "";
-    //     tr += `
-    //         <tr>
-    //             <td>${1}</td>
-    //             <td>${cityObj[data[0]].getName()} -> ${cityObj[data[1]].getName()}</td>
-    //             <td>${cityObj[data[0]].getDistance(data[1])}</td>
-    //             <td>0</td>
-    //             <td>${cityObj[data[0]].getWeight()}</td>
-    //         </tr>
-    //     `
-    //     sumDistance+=cityObj[data[0]].getDistance(data[1]);
-    //     for (let i = 1; i < data.length-1; i++) {
-    //         console.log(cityObj[data[i]]);
-    //         tr += `
-    //         <tr>
-    //             <td>${i+1}</td>
-    //             <td>${cityObj[data[i]].getName()} -> ${cityObj[data[i+1]].getName()}</td>
-    //             <td>${cityObj[data[i]].getDistance(data[i+1])}</td>
-    //             <td>${cityObj[data[i]].getWeight()}</td>
-    //             <td>${cityObj[data[i]].getWeight()}</td>
-    //         </tr>
-    //         `
-    //         sumDistance+=cityObj[data[i]].getDistance(data[i+1]);
-    //         sumWeight+=cityObj[data[i]].getWeight();
-    //     }
-    //     let last = data.length-1
-    //     tr += `
-    //         <tr>
-    //             <td>${data.length}</td>
-    //             <td>${cityObj[data[last]].getName()} -> ${cityObj[data[0]].getName()}</td>
-    //             <td>${cityObj[data[last]].getDistance(data[0])}</td>
-    //             <td>${cityObj[data[last]].getWeight()}</td>
-    //             <td>${cityObj[data[last]].getWeight()}</td>
-    //         </tr>
-    //     `
-    //     sumDistance+=cityObj[data[last]].getDistance(data[0]);
-    //     sumWeight+=cityObj[data[last]].getWeight();
-    //     tr += `
-    //         <tr>
-    //             <td colspan="2">Total</td>
-    //             <td>${sumDistance}</td>
-    //             <td>${sumWeight}</td>
-    //             <td>${cityObj[data[last]].getWeight()}</td>
-    //         </tr>
-    //     `
-    //     tbody.innerHTML = tr;
-    // }
+    function renderTable(data) {
+        let sumDistance = 0;
+        let sumWeight = 0;
+        let sumProfit = 0;
+        const tbody = document.querySelector('.path-container');
+        let tr = "";
+        console.log(data);
+        if (!(data.length <= 1)) {
+            tr += `
+            <div class="table-container">
+                <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Kota</th>
+                                <th>Distance</th>
+                                <th>Weight</th>
+                                <th>Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `
+            for (let i = 0; i < data.length; i++) {
+                tr += `
+                <tr>
+                    <td>${i+1}</td>
+                    <td>${cityObj[data[i]].getName()} -> ${cityObj[data[i+1]] ? cityObj[data[i+1]].getName() : cityObj[data[0]].getName()}</td>
+                    <td>${cityObj[data[i]].getDistance(data[i+1]) || "Kembali"}</td>
+                    <td>${cityObj[data[i+1]] ? cityObj[data[i+1]].getWeight().toLocaleString() : "Kembali"}</td>
+                    <td>${cityObj[data[i+1]] ? cityObj[data[i+1]].getProfit().toLocaleString() : "Kembali"}</td>
+                </tr>
+                `
+                sumDistance+=cityObj[data[i]].getDistance(data[i+1]) || 0;
+                sumWeight+=cityObj[data[i+1]] ? cityObj[data[i+1]].getWeight() : 0
+                sumProfit+=cityObj[data[i+1]] ? cityObj[data[i+1]].getProfit() : 0;
+            }
+            tr += `
+                <tr>
+                    <td colspan="2">Total</td>
+                    <td>${sumDistance.toLocaleString()} km</td>
+                    <td>${sumWeight.toLocaleString()} kg</td>
+                    <td>${sumProfit.toLocaleString()}</td>
+                </tr>
+            `
+            tr += `
+                    </tbody>
+                </table>
+            </div>
+
+            `
+        }
+        tbody.innerHTML = tr;
+    }
+
+    function toggleMenu(source="", target="") {
+        const sidebar = document.querySelector(source);
+        const sidebarOpen = document.querySelector(target);
+        sidebar.classList.toggle('hidden');
+        sidebarOpen.classList.toggle('hidden');
+    }
 
 </script>
 </html>
