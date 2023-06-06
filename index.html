@@ -92,7 +92,7 @@
         <span class="floating-menu brute-open" onclick="toggleMenu('.brute','.brute-open')" style="top: 10px; right: 170px; padding-inline: 10px;">
             <label>BEST</label>
         </span>
-        <div class="floating-box path drag hidden" style="min-height: 100px;height: fit-content; max-height: 90vh; width: fit-content; min-width: 400px;">
+        <div class="floating-box path drag hidden" style="min-height: 100px;height: fit-content; max-height: 90vh; width: 500px;">
             <div class="header" style="display: flex; justify-content: space-between;">
                 <label>PATH</label>
                 <span onclick="toggleMenu('.path','.path-open')" class="click">
@@ -140,7 +140,7 @@
 <script>
     var c = document.getElementById("canvasMap");
     var ctx = c.getContext("2d");
-    scale = 1.4;
+    scale = 0.35;
 
     dragElement(document.querySelector(".path"));
     dragElement(document.querySelector(".info"));
@@ -150,12 +150,14 @@
 
     const data = [
         // nama, distances, circlePos, weight, profit
-        ["Palembang",[0,112,313,203,63.8,73], [765,272], 20, 20000],
-        ["Prabumulih", [112, 0, 209, 200, 168, 128], [638, 376], 30, 10000],
-        ["Lubuk Linggau", [312, 209, 0, 111, 368, 328], [310, 352], 10, 20000],
-        ["Ngulak", [203, 200, 111, 0, 265, 269], [438, 229], 20, 40000],
-        ["Upang", [63.8, 168, 369, 266, 0, 131], [809, 218], 50, 100000],
-        ["Pedamaran", [73.4, 105, 314, 269, 138, 0], [778, 395], 20, 30000],
+        ["Palembang",[0,112,313,203,63.8,73,121,181], [3269,1690], 20, 20000],
+        ["Prabumulih", [112, 0, 209, 200, 168, 128, 159,236], [2885, 2020], 30, 10000],
+        ["Lubuk Linggau", [312, 209, 0, 111, 368, 328, 204,437], [1875, 1930], 10, 20000],
+        ["Ngulak", [203, 200, 111, 0, 265, 269, 92.5,377], [2270, 1550], 20, 40000],
+        ["Upang", [63.8, 168, 369, 266, 0, 131, 183,240], [3410, 1520], 50, 100000],
+        ["Pedamaran", [73.4, 105, 314, 269, 138, 0, 187,170], [3315, 2060], 20, 30000],
+        ["Keluang", [121,160,204,92.5,183,187,0,296], [2640, 1468], 30, 200000],
+        ["Tandjungibul", [182,214,466,378,241,165,296,0], [3880, 2045], 40, 100000],
     ];
     
     let cityObj = [];
@@ -248,19 +250,13 @@
     renderSelect();
     renderInfo();
     
-    var img = new Image();
+    const img = new Image();
     img.src = "Map.jpg";
     img.onload = function() {
         c.width = img.width*scale;
         c.height = img.height*scale;
         ctx.drawImage(img, 0, 0, this.width*scale, this.height*scale);
 
-        // drawDistances(0,1);
-        // drawDistances(1,2);
-        // drawDistances(2,3);
-        // drawDistances(3,4);
-        // drawDistances(4,5);
-        // drawDistances(5,0);
         drawLocation();
     };
 
@@ -280,7 +276,7 @@
             drawDistances(path[i],path[i+1]);
             pathData.push(path[i])
         }
-        current = path.length-1
+        current = path.length-1;
         // pathData.push(path[current])
         // console.log(path, pathData, cityObj.length-1);
         drawLocation();
@@ -302,12 +298,12 @@
             drawDistances(path[i],path[i+1]);
             pathData.push(path[i])
         }
-        pathData.push(path[current])
+        // pathData.push(path[current])
         drawLocation();
         renderTable(pathData);
 
         function checkCurrent() {
-            if (current >= path.length) {
+            if (current >= path.length-1) {
                 current = path.length-1
             }
         }
@@ -348,7 +344,7 @@
             const position = city.getCirclePosition();
             ctx.beginPath();
             ctx.arc(position[0], position[1], radius, 0, 2 * Math.PI, false);
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = '#4a4a4a85';
             ctx.fill();
             ctx.lineWidth = 1;
             ctx.strokeStyle = '#000000';
@@ -361,6 +357,9 @@
     };
 
     function drawLine(pos1, pos2, text) {
+        ctx.strokeStyle = '#3000d3';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
         ctx.moveTo(pos1[0], pos1[1]);
         ctx.lineTo(pos2[0], pos2[1]);
         ctx.stroke();
@@ -489,7 +488,7 @@
         //ambil lagi kota awal jika selesai
         path.push(idxKotaAwal);
         // console.log(path);
-        return [path, sumProfit, sumWeight, sumDistance];
+        return [path, sumProfit, sumWeight, sumDistance];   
     }
 
     function bruteForceAlgorithm(type) {
