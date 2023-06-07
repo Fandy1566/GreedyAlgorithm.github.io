@@ -334,7 +334,6 @@
                 current = 0
             }
         }
-        renderTable(pathData);
     }
 
 
@@ -474,13 +473,15 @@
             }
 
             //check ketersediaan kota selanjutnya
-            if (next !== -1 && sumWeight+weight[next] <= maxWeight) {
+            if (next !== -1) {
                 visited[next] = true;
-                path.push(next);
-                sumWeight += weight[next];
-                sumProfit += total[next];
-                sumDistance += distances[i][next];
-                current = next;
+                if (sumWeight+weight[next] <= maxWeight) {
+                    path.push(next);
+                    sumWeight += weight[next];
+                    sumProfit += total[next];
+                    sumDistance += distances[i][next];
+                    current = next;
+                }
             }
             
         }
